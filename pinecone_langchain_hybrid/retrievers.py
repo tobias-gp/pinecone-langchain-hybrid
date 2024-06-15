@@ -1,7 +1,7 @@
 from typing import Optional, Type, List
-import json
 import os
 import logging
+import time
 
 from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.tools import BaseTool
@@ -45,8 +45,17 @@ class PineconeHybridSearchRetriever(PineconeHybridSearchRetrieverOriginal):
             filter: dict = {}, 
             top_k: int = None) -> List[Document]:
         """
-        Overriding this from parent class to support fast non-embedding search with alpha = 0 
-        We also add the ability to set filters for metadata
+        Overriding this method from the parent class to support fast non-embedding search with alpha = 0.
+        Adds the ability to set filters for metadata.
+
+        Parameters:
+        - query (str): The search query.
+        - run_manager (CallbackManagerForRetrieverRun): Manager for callback handling.
+        - filter (dict): Filters for metadata.
+        - top_k (int): Number of top results to retrieve.
+
+        Returns:
+        - List[Document]: List of retrieved documents.
         """
         import time
 
@@ -97,6 +106,12 @@ class PineconeRetrieverTool(BaseTool):
 
     @property
     def retriever(self):
+        """
+        Property method to instantiate and return a PineconeHybridSearchRetriever.
+
+        Returns:
+        - PineconeHybridSearchRetriever: The retriever instance.
+        """
         index = pinecone.Index(PINECONE_INDEX)
 
         bm25_encoder = BM25Encoder(language=Settings.NLTK_LANGUAGE).load(BM25_PATH)
@@ -113,11 +128,32 @@ class PineconeRetrieverTool(BaseTool):
         return retriever
         
     def retrieve_documents(self, query: str, **kwargs) -> list:
+        """
+        Retrieve documents based on the given query.
+
+        Parameters:
+        - query (str): The search query.
+        - **kwargs: Additional arguments.
+
+        Returns:
+        - list: List of retrieved documents.
+        """
         docs = self.retriever.invoke(query)
 
         return docs
 
     def _run(self, query: str, run_manager: Optional[CallbackManagerForToolRun] = None, **kwargs) -> str:
+        """
+        Execute the document retrieval and format the results.
+
+        Parameters:
+        - query (str): The search query.
+        - run_manager (Optional[CallbackManagerForToolRun]): Manager for callback handling.
+        - **kwargs: Additional arguments.
+
+        Returns:
+        - str: Formatted search results.
+        """
         document_separator = "\n\n"
         document_prompt = PromptTemplate.from_template('<meta page_number="{page_number:.0f}" />\n\n{page_content}')
 
@@ -131,6 +167,15 @@ class PineconeRetrieverTool(BaseTool):
         )
         
     async def _arun(self, **kwargs) -> str:
+        """
+        Asynchronous version of the _run method.
+
+        Parameters:
+        - **kwargs: Additional arguments.
+
+        Returns:
+        - str: Formatted search results.
+        """
         return self._run(**kwargs)
 
 class DocumentsPineconeRetrieverToolArgsSchema(BaseModel):
@@ -146,16 +191,16 @@ class DocumentsPineconeRetrieverTool(PineconeRetrieverTool):
 
 if __name__ == "__main__":
     tool = DocumentsPineconeRetrieverTool(top_k=5, alpha=0.5)
-
     input = {
         "query": "Which features can I use for emotion detection?"
     }
 
-    import time
     start_time = time.time()
+    docs = tool.retrieve_documents(query="Which features can I use for emotion detection?")
+    delta_time = time.time() - start_time
 
-    documents_prompt = tool.invoke(input=input)
+    # or the assembled prompt
+    # documents_prompt = tool.invoke(input=input)
 
+    print(docs)
     print("Time taken: %s" % (time.time() - start_time))
-
-    #print(documents_prompt)

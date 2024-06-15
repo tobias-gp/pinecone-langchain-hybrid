@@ -35,23 +35,41 @@ embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model=Settings.OPEN
 pinecone = Pinecone(api_namespace=PINECONE_API_KEY)
 
 class Uploader:
+    """
+    Base class for uploading documents. Subclasses should implement specific upload methods.
+    """
 
     def __init__(self) -> None:
         pass
 
 class PineconeUploader(Uploader):
+    """
+    Class for uploading documents to Pinecone.
+    """
 
     def __init__(self, ingesters) -> None:
+        """
+        Initialize the PineconeUploader with a list of ingesters.
+
+        Parameters:
+        - ingesters (List[Ingester]): List of document ingesters.
+        """
         self.documents = []
         self.ingesters = ingesters
 
     def run(self):
+        """
+        Main method to run the uploader process: prepare the index, get documents, update the corpus, and upload documents.
+        """
         self.prepare_index()
         self.get_documents()
         self.update_corpus()
         self.upload()
 
     def get_documents(self):
+        """
+        Retrieve documents from all ingesters and store them in the self.documents list.
+        """
         for ingester in self.ingesters:
             documents = ingester.get_documents()
 
@@ -59,9 +77,15 @@ class PineconeUploader(Uploader):
             self.documents.extend(documents)
 
     def prepare_index(self):
+        """
+        Prepare the Pinecone index for document insertion.
+        """
         self.index = pinecone.Index(PINECONE_INDEX)
 
     def update_corpus(self): 
+        """
+        Update the corpus by tokenizing the text and fitting the BM25 encoder. Save the BM25 values to a file.
+        """
         corpus = ""
 
         for document in self.documents:
@@ -82,6 +106,9 @@ class PineconeUploader(Uploader):
         bm25_encoder.dump(BM25_PATH)
 
     def upload(self): 
+        """
+        Upload all documents to the Pinecone index, organized by namespaces.
+        """
         # delete all documents in the target namespaces
         namespaces = [] 
         for document in self.documents:
@@ -93,6 +120,12 @@ class PineconeUploader(Uploader):
             self.upload_to_namespace(namespace)
 
     def upload_to_namespace(self, namespace: str):
+        """
+        Upload documents to a specific namespace in Pinecone.
+
+        Parameters:
+        - namespace (str): The target namespace.
+        """
         bm25 = BM25Encoder().load(BM25_PATH)
         index = pinecone.Index(PINECONE_INDEX)
 
@@ -128,7 +161,7 @@ class PineconeUploader(Uploader):
 
             i += 1
 
-            # for every 20 files, upsert into db
+            # for every PINECONE_BATCH_SIZE files, upsert into db
             if len(texts_batch) >= PINECONE_BATCH_SIZE:
                 logging.info("Inserting documents from %i to %i" % (i - PINECONE_BATCH_SIZE, i))
                 retriever.add_texts(texts=texts_batch, ids=ids_batch, metadatas=metadatas_batch, namespace=namespace)

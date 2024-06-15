@@ -1,7 +1,7 @@
 class Settings: 
 
-    OPENAI_EMBEDDING_MODEL = "text-embedding-3-large"
-    EMBEDDING_DIMENSION = 3072
+    OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+    EMBEDDING_DIMENSION = 1536
 
     SCORE_RELEVANCE_THRESHOLD = 0.01
     
