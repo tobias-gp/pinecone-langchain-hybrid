@@ -6,7 +6,7 @@ I hope that this example helps others to implement a high-quality semantic searc
 
 ## Prerequisites
 
-- A Pinecone index with dimensions 3072 and dotproduct for similarity. You can use the free starter subscription.
+- A Pinecone index with dimensions 1536 (when using OpenAI text-embedding-3-small) and dotproduct for similarity. You can use the free starter subscription.
 - An OpenAI API key with access to GPT-4. If you are using Azure, you will have to modify the instantiation of OpenAIEmbeddings.
 
 ## Preparation
