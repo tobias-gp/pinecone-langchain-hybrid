@@ -1,0 +1,7 @@
+html2text==2024.2.26
+langchain==0.2.0
+langchain-openai==0.1.7
+langchain-community==0.2.0
+pinecone==4.0.0
+pinecone-text==0.9.0
+unstructured[pdf]==0.14.6

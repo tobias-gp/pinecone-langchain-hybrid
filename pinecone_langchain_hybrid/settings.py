@@ -1,0 +1,11 @@
+class Settings: 
+
+    OPENAI_EMBEDDING_MODEL = "text-embedding-3-large"
+    EMBEDDING_DIMENSION = 3072
+
+    SCORE_RELEVANCE_THRESHOLD = 0.01
+    
+    NLTK_LANGUAGE = "english"
+
+    CHUNKER_PDF_MAX_CHARACTERS = 5000
+    CHUNKER_PDF_OVERLAP = 1000
